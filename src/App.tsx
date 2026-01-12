@@ -1,4 +1,5 @@
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, Settings } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import Hero from './components/Hero';
 import Features from './components/Features';
 import Catalog from './components/Catalog';
@@ -20,7 +21,19 @@ function App() {
       <FAQ />
       <CTA />
 
-      <a
+      {/* Admin Button */}
+      <Link
+        to="/admin"
+        className="fixed bottom-6 right-24 bg-gray-800 text-white p-4 rounded-full shadow-2xl hover:bg-gray-900 transition-all hover:scale-110 z-50 flex items-center gap-2 group"
+        title="Admin Panel"
+      >
+        <Settings size={28} />
+        <span className="absolute bottom-full right-0 mb-2 bg-gray-800 text-white px-3 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+          Admin Panel
+        </span>
+      </Link>
+
+      <a 
         href="https://wa.me/+6285792381511?text=Halo,%20saya%20ingin%20sewa%20gerobak%20jualan"
         target="_blank"
         rel="noopener noreferrer"
