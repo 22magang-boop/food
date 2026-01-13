@@ -33,7 +33,7 @@ export default function Hero() {
               <a
                 href="#catalog"
                 className="inline-flex items-center justify-center gap-2 bg-white text-gray-700 px-8 py-4 rounded-lg text-lg font-semibold border-2 border-gray-200 hover:border-orange-600 hover:text-orange-600 transition-all"
-              >
+              >      
                 Lihat Katalog
               </a>
             </div>
