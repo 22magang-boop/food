@@ -5,31 +5,36 @@ const carts = [
     icon: Coffee,
     name: 'Gerobak Kopi / Coffee Cart',
     description: 'Desain modern dan compact, cocok untuk jualan kopi, espresso, dan minuman kekinian. Dilengkapi tempat penyimpanan bahan dan display menarik.',
-    features: ['Tempat mesin kopi', 'Storage untuk cup', 'Display topping', 'Lampu LED']
+    features: ['Tempat mesin kopi', 'Storage untuk cup', 'Display topping', 'Lampu LED'],
+    price: 'Rp 500.000'
   },
   {
     icon: IceCream,
     name: 'Gerobak Es Teh / Minuman',
     description: 'Sempurna untuk bisnis minuman segar seperti es teh, jus, smoothies, dan minuman dingin lainnya. Ruang luas untuk ice box dan dispenser.',
-    features: ['Ruang ice box besar', 'Tempat dispenser', 'Rak botol/cup', 'Parasol pelindung']
+    features: ['Ruang ice box besar', 'Tempat dispenser', 'Rak botol/cup', 'Parasol pelindung'],
+    price: 'Rp 500.000'
   },
   {
     icon: Sandwich,
     name: 'Gerobak Snack / Gorengan',
     description: 'Ideal untuk jualan gorengan, dimsum, risol, atau snack lainnya. Dilengkapi dengan etalase kaca untuk display produk yang higienis.',
-    features: ['Etalase kaca', 'Kompor portable', 'Rak display', 'Laci penyimpanan']
+    features: ['Etalase kaca', 'Kompor portable', 'Rak display', 'Laci penyimpanan'],
+    price: 'Rp 350.000'
   },
   {
     icon: Soup,
     name: 'Gerobak Bakso / Mie Ayam',
     description: 'Dirancang khusus untuk jualan makanan berkuah. Tempat rebus yang aman, storage bumbu lengkap, dan tatakan mangkuk yang rapi.',
-    features: ['Kompor gas aman', 'Tempat rebus besar', 'Storage bumbu', 'Rak mangkuk']
+    features: ['Kompor gas aman', 'Tempat rebus besar', 'Storage bumbu', 'Rak mangkuk'],
+    price: 'Rp 350.000'
   },
   {
     icon: Drumstick,
     name: 'Gerobak Ayam Geprek',
     description: 'Gerobak khusus untuk ayam geprek dan gorengan. Dilengkapi dengan fryer space, tempat cobek, dan display yang menggugah selera.',
-    features: ['Ruang fryer', 'Display etalase', 'Tempat cobek', 'Storage matang']
+    features: ['Ruang fryer', 'Display etalase', 'Tempat cobek', 'Storage matang'],
+    price: 'Rp 500.000'
   }
 ];
 
@@ -65,6 +70,11 @@ export default function Catalog() {
                 <p className="text-gray-600 leading-relaxed">
                   {cart.description}
                 </p>
+
+                <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                  <p className="text-sm text-gray-600 mb-1">Harga Sewa per Hari:</p>
+                  <p className="text-3xl font-bold text-orange-600">{cart.price}</p>
+                </div>
 
                 <div className="border-t border-gray-100 pt-4">
                   <p className="text-sm font-semibold text-gray-700 mb-3">Kelengkapan:</p>

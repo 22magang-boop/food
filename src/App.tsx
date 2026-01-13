@@ -23,13 +23,13 @@ function App() {
 
       {/* Admin Button */}
       <Link
-        to="/admin"
+        to="/login"
         className="fixed bottom-6 right-24 bg-gray-800 text-white p-4 rounded-full shadow-2xl hover:bg-gray-900 transition-all hover:scale-110 z-50 flex items-center gap-2 group"
-        title="Admin Panel"
+        title="Admin Login"
       >
         <Settings size={28} />
         <span className="absolute bottom-full right-0 mb-2 bg-gray-800 text-white px-3 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-          Admin Panel
+          Admin Login
         </span>
       </Link>
 
