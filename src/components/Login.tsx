@@ -16,8 +16,20 @@ export default function Login() {
 
     // Simulate API call
     setTimeout(() => {
-      // Default credentials
-      if (email === 'admin@foudcourt.com' && password === 'admin123') {
+      // Get stored credentials from localStorage or use defaults
+      let adminCredentials = { email: 'admin@foudcourt.com', password: 'admin123' };
+      const storedCredentials = localStorage.getItem('adminCredentials');
+      
+      if (storedCredentials) {
+        try {
+          adminCredentials = JSON.parse(storedCredentials);
+        } catch (error) {
+          console.error('Error loading admin credentials:', error);
+        }
+      }
+
+      // Check login credentials
+      if (email === adminCredentials.email && password === adminCredentials.password) {
         // Store auth token in localStorage
         localStorage.setItem('adminAuth', JSON.stringify({
           email: email,

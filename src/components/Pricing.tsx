@@ -1,7 +1,19 @@
 import { Check, Star } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
-const plans = [
+interface PricingPlan {
+  id: string;
+  name: string;
+  price: string;
+  period: string;
+  description?: string;
+  features?: string[];
+  popular?: boolean;
+}
+
+const defaultPlans: PricingPlan[] = [
   {
+    id: 'daily',
     name: 'Paket Harian',
     price: '50.000',
     period: '/hari',
@@ -15,6 +27,7 @@ const plans = [
     popular: false
   },
   {
+    id: 'weekly',
     name: 'Paket Mingguan',
     price: '300.000',
     period: '/minggu',
@@ -30,6 +43,7 @@ const plans = [
     popular: false
   },
   {
+    id: 'monthly',
     name: 'Paket Bulanan',
     price: '1.000.000',
     period: '/bulan',
@@ -49,6 +63,44 @@ const plans = [
 ];
 
 export default function Pricing() {
+  const [plans, setPlans] = useState<PricingPlan[]>(defaultPlans);
+
+  useEffect(() => {
+    // Load pricing plans from localStorage
+    const savedPricingPlans = localStorage.getItem('pricingPlans');
+    if (savedPricingPlans) {
+      try {
+        const loadedPlans = JSON.parse(savedPricingPlans);
+        // Merge with default plans to preserve structure and features
+        setPlans(loadedPlans.map((plan: PricingPlan, index: number) => ({
+          ...defaultPlans[index],
+          ...plan
+        })));
+      } catch (error) {
+        console.error('Error loading pricing plans:', error);
+      }
+    }
+
+    // Listen for storage changes from admin page
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'pricingPlans' && e.newValue) {
+        try {
+          const loadedPlans = JSON.parse(e.newValue);
+          setPlans(loadedPlans.map((plan: PricingPlan, index: number) => ({
+            ...defaultPlans[index],
+            ...plan
+          })));
+        } catch (error) {
+          console.error('Error loading pricing plans:', error);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+
   return (
     <section id="pricing" className="py-20 px-6 bg-white">
       <div className="max-w-7xl mx-auto">
@@ -86,14 +138,14 @@ export default function Pricing() {
 
                 <div className="mb-6">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-semibold">Rp</span>
+                    <span className="text-2xl font -semibold">Rp</span>
                     <span className="text-5xl font-bold">{plan.price}</span>
                     <span className="text-lg">{plan.period}</span>
                   </div>
                 </div>
 
                 <ul className="space-y-3 mb-8">
-                  {plan.features.map((feature, idx) => (
+                  {plan.features?.map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-3">
                       <Check
                         size={20}
