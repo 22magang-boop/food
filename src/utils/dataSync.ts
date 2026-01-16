@@ -33,7 +33,7 @@ export interface Customer {
 export interface BusinessProfile {
   name: string;
   phone: string;
-  email: string;
+  email: string; 
   address: string;
   city: string;
   province: string;
@@ -44,7 +44,7 @@ export interface BusinessProfile {
 export const saveCartsToStorage = (carts: Cart[]): void => {
   try {
     localStorage.setItem(DataSyncKeys.CARTS, JSON.stringify(carts));
-  } catch (error) {
+  } catch (error) { 
     console.error('Error saving carts to localStorage:', error);
   }
 };

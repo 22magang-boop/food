@@ -1,4 +1,4 @@
-import { BarChart3, Users, Package, ShoppingCart, Settings, LogOut, Menu, X, Edit2, Trash2, Eye } from 'lucide-react';
+import { BarChart3, Users, Package, ShoppingCart, Settings, LogOut, Menu, X, Edit2, Trash2, Eye, Bell, CheckCircle, AlertCircle, Trash, MessageCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -65,11 +65,21 @@ export default function Admin() {
   const [customerFormData, setCustomerFormData] = useState({ name: '', phone: '', email: '', status: 'Aktif' });
   const [newCustomerData, setNewCustomerData] = useState({ name: '', phone: '', email: '', status: 'Aktif' });
   const [showPricingModal, setShowPricingModal] = useState(false);
-  const [notifications, setNotifications] = useState([
-    { id: 1, type: 'order', message: 'Pesanan baru dari Budi Santoso untuk Gerobak Kopi', time: '2026-01-13 10:30', read: false },
-    { id: 2, type: 'customer', message: 'Pelanggan baru: Rudi Hartono', time: '2026-01-12 15:45', read: false },
-    { id: 3, type: 'maintenance', message: 'Gerobak Bakso / Mie Ayam masuk maintenance', time: '2026-01-11 08:00', read: true },
-  ]);
+  const [notifications, setNotifications] = useState(() => {
+    const savedNotifications = localStorage.getItem('adminNotifications');
+    if (savedNotifications) {
+      try {
+        return JSON.parse(savedNotifications);
+      } catch (error) {
+        console.error('Error loading notifications:', error);
+      }
+    }
+    return [
+      { id: 1, type: 'order', message: 'Pesanan baru dari Budi Santoso untuk Gerobak Kopi', time: '2026-01-13 10:30', read: false },
+      { id: 2, type: 'customer', message: 'Pelanggan baru: Rudi Hartono', time: '2026-01-12 15:45', read: false },
+      { id: 3, type: 'maintenance', message: 'Gerobak Bakso / Mie Ayam masuk maintenance', time: '2026-01-11 08:00', read: true },
+    ];
+  });
   const [notificationSettings, setNotificationSettings] = useState({
     orderNotifications: true,
     customerNotifications: true,
@@ -102,6 +112,7 @@ export default function Admin() {
       name: 'Foud Court',
       phone: '+62 821 1234 5678',
       email: 'info@foudcourt.com',
+      whatsapp: '+6285792381511',
       address: 'Jl. Merdeka No. 123, Jakarta Pusat 12190',
       city: 'Jakarta',
       province: 'DKI Jakarta',
@@ -110,6 +121,7 @@ export default function Admin() {
   });
   const [businessFormData, setBusinessFormData] = useState({ ...businessProfile });
   const [businessMessage, setBusinessMessage] = useState({ type: '', text: '' });
+  const [whatsappNumber, setWhatsappNumber] = useState(businessProfile.whatsapp || '+6285792381511');
 
   // Initialize pricing plans from localStorage or use defaults
   const [pricingPlans, setPricingPlans] = useState(() => {
@@ -147,9 +159,19 @@ export default function Admin() {
     localStorage.setItem('customersData', JSON.stringify(customers));
   }, [customers]);
 
+  // Sync notifications to localStorage
+  useEffect(() => {
+    localStorage.setItem('adminNotifications', JSON.stringify(notifications));
+  }, [notifications]);
+
+  // Sync business profile to localStorage
   // Sync business profile to localStorage
   useEffect(() => {
     localStorage.setItem('businessProfile', JSON.stringify(businessProfile));
+    // Update whatsapp number when business profile changes
+    if (businessProfile.whatsapp) {
+      setWhatsappNumber(businessProfile.whatsapp);
+    }
   }, [businessProfile]);
 
   // Sync pricing plans to localStorage
@@ -257,6 +279,44 @@ export default function Admin() {
       setCustomers([...customers, { id: newId, name: newCustomerData.name, phone: newCustomerData.phone, email: newCustomerData.email, join: today, status: newCustomerData.status }]);
       setNewCustomerData({ name: '', phone: '', email: '', status: 'Aktif' });
       setShowAddCustomerModal(false);
+
+      // Add notification for new customer
+      if (notificationSettings.customerNotifications) {
+        const currentTime = new Date().toLocaleString('id-ID');
+        setNotifications([
+          { id: notifications.length + 1, type: 'customer', message: `Pelanggan baru: ${newCustomerData.name}`, time: currentTime, read: false },
+          ...notifications
+        ]);
+      }
+    }
+  };
+
+  const handleMarkNotificationRead = (notificationId: number) => {
+    setNotifications(notifications.map((notif: any) => 
+      notif.id === notificationId ? { ...notif, read: true } : notif
+    ));
+  };
+
+  const handleDeleteNotification = (notificationId: number) => {
+    setNotifications(notifications.filter((notif: any) => notif.id !== notificationId));
+  };
+
+  const handleClearAllNotifications = () => {
+    if (window.confirm('Hapus semua notifikasi?')) {
+      setNotifications([]);
+    }
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'order':
+        return <ShoppingCart size={18} className="text-orange-600" />;
+      case 'customer':
+        return <Users size={18} className="text-green-600" />;
+      case 'maintenance':
+        return <AlertCircle size={18} className="text-red-600" />;
+      default:
+        return <Bell size={18} className="text-blue-600" />;
     }
   };
 
@@ -368,6 +428,14 @@ export default function Admin() {
       setBusinessMessage({ type: 'error', text: 'Format email tidak valid' });
       return;
     }
+    if (!businessFormData.whatsapp) {
+      setBusinessMessage({ type: 'error', text: 'Nomor WhatsApp tidak boleh kosong' });
+      return;
+    }
+    if (!/^(\+62|62|0)[0-9]{9,12}$/.test(businessFormData.whatsapp.replace(/[-\s]/g, ''))) {
+      setBusinessMessage({ type: 'error', text: 'Format nomor WhatsApp tidak valid' });
+      return;
+    }
     if (!businessFormData.address) {
       setBusinessMessage({ type: 'error', text: 'Alamat tidak boleh kosong' });
       return;
@@ -427,14 +495,25 @@ export default function Admin() {
       {/* Header */}
       <header className="bg-white shadow-md sticky top-0 z-40">
         <div className="flex items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="p-2 hover:bg-gray-100 rounded-lg lg:hidden"
             >
               {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
-            <h1 className="text-2xl font-bold text-orange-600">Admin Panel</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-orange-600">Admin Panel</h1>
+              <a
+                href={`https://wa.me/${whatsappNumber.replace(/[^0-9+]/g, '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={`Chat WhatsApp: ${whatsappNumber}`}
+                className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+              >
+                <MessageCircle size={24} />
+              </a>
+            </div>
           </div>
           <button 
             onClick={handleLogout}
@@ -1299,21 +1378,49 @@ export default function Admin() {
 
                 {/* Notifications History */}
                 <div className="mt-6">
-                  <h4 className="text-lg font-semibold text-gray-900 mb-4">Riwayat Notifikasi</h4>
-                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-lg font-semibold text-gray-900">Riwayat Notifikasi</h4>
+                    {notifications.length > 0 && (
+                      <button
+                        onClick={handleClearAllNotifications}
+                        className="text-sm text-red-600 hover:text-red-700 font-medium"
+                      >
+                        Hapus Semua
+                      </button>
+                    )}
+                  </div>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
                     {notifications.length > 0 ? (
-                      notifications.map((notif) => (
-                        <div key={notif.id} className={`p-4 rounded-lg border ${notif.read ? 'bg-gray-50 border-gray-200' : 'bg-blue-50 border-blue-200'}`}>
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <p className={`text-sm font-medium ${notif.read ? 'text-gray-600' : 'text-blue-900'}`}>
+                      notifications.map((notif: any) => (
+                        <div key={notif.id} className={`p-4 rounded-lg border flex items-start justify-between ${notif.read ? 'bg-gray-50 border-gray-200' : 'bg-blue-50 border-blue-200'}`}>
+                          <div className="flex items-start gap-3 flex-1">
+                            <div className="mt-0.5 flex-shrink-0">
+                              {getNotificationIcon(notif.type)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-sm font-medium break-words ${notif.read ? 'text-gray-600' : 'text-gray-900'}`}>
                                 {notif.message}
                               </p>
                               <p className="text-xs text-gray-500 mt-1">{notif.time}</p>
                             </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                             {!notif.read && (
-                              <div className="w-2 h-2 bg-blue-500 rounded-full mt-1 ml-2"></div>
+                              <button
+                                onClick={() => handleMarkNotificationRead(notif.id)}
+                                title="Tandai sebagai dibaca"
+                                className="p-1.5 text-blue-600 hover:bg-blue-100 rounded transition-colors"
+                              >
+                                <CheckCircle size={16} />
+                              </button>
                             )}
+                            <button
+                              onClick={() => handleDeleteNotification(notif.id)}
+                              title="Hapus notifikasi"
+                              className="p-1.5 text-red-600 hover:bg-red-100 rounded transition-colors"
+                            >
+                              <Trash size={16} />
+                            </button>
                           </div>
                         </div>
                       ))
@@ -1530,6 +1637,19 @@ export default function Admin() {
                           placeholder="Contoh: info@bisnis.com"
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                         />
+                      </div>
+
+                      {/* Nomor WhatsApp */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Nomor WhatsApp</label>
+                        <input
+                          type="tel"
+                          value={businessFormData.whatsapp}
+                          onChange={(e) => setBusinessFormData({ ...businessFormData, whatsapp: e.target.value })}
+                          placeholder="Contoh: +6285792381511 atau 085792381511"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Gunakan format internasional (+62) atau lokal (08)</p>
                       </div>
 
                       {/* Alamat */}

@@ -64,6 +64,7 @@ const defaultPlans: PricingPlan[] = [
 
 export default function Pricing() {
   const [plans, setPlans] = useState<PricingPlan[]>(defaultPlans);
+  const [whatsappNumber, setWhatsappNumber] = useState('+6285792381511');
 
   useEffect(() => {
     // Load pricing plans from localStorage
@@ -81,6 +82,19 @@ export default function Pricing() {
       }
     }
 
+    // Load WhatsApp number from localStorage
+    const businessProfile = localStorage.getItem('businessProfile');
+    if (businessProfile) {
+      try {
+        const profile = JSON.parse(businessProfile);
+        if (profile.whatsapp) {
+          setWhatsappNumber(profile.whatsapp);
+        }
+      } catch (error) {
+        console.error('Error loading business profile:', error);
+      }
+    }
+
     // Listen for storage changes from admin page
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'pricingPlans' && e.newValue) {
@@ -92,6 +106,17 @@ export default function Pricing() {
           })));
         } catch (error) {
           console.error('Error loading pricing plans:', error);
+        }
+      }
+      
+      if (e.key === 'businessProfile' && e.newValue) {
+        try {
+          const profile = JSON.parse(e.newValue);
+          if (profile.whatsapp) {
+            setWhatsappNumber(profile.whatsapp);
+          }
+        } catch (error) {
+          console.error('Error loading business profile:', error);
         }
       }
     };
@@ -159,7 +184,7 @@ export default function Pricing() {
                 </ul>
 
                 <a
-                  href={`https://wa.me/+6285792381511?text=Halo,%20saya%20mau%20sewa%20${plan.name}`}
+                  href={`https://wa.me/${whatsappNumber.replace(/[^0-9+]/g, '')}?text=Halo,%20saya%20mau%20sewa%20${plan.name}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`block w-full text-center py-4 rounded-xl font-bold transition-all ${
@@ -178,7 +203,7 @@ export default function Pricing() {
         <div className="mt-12 text-center">
           <p className="text-gray-600 mb-4">Butuh paket custom atau sewa lebih dari 3 bulan?</p>
           <a
-            href="https://wa.me/62812345678?text=Halo,%20saya%20mau%20tanya%20paket%20custom"
+            href={`https://wa.me/${whatsappNumber.replace(/[^0-9+]/g, '')}?text=Halo,%20saya%20mau%20tanya%20paket%20custom`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-orange-600 font-semibold hover:text-orange-700 transition-all"

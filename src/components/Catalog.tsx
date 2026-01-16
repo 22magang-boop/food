@@ -150,9 +150,7 @@ export default function Catalog() {
                 </div>
 
                 <a
-                  href="https://wa.me/+6285792381511?text=Halo,%20saya%20tertarik%20dengan%20gerobak%20ini"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="#pricing"
                   className="block w-full text-center bg-orange-600 text-white py-3 rounded-lg font-semibold hover:bg-orange-700 transition-all mt-4"
                 >
                   Sewa Sekarang

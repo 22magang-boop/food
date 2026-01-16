@@ -1,5 +1,5 @@
 import { HelpCircle, ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const faqs = [
   {
@@ -38,6 +38,39 @@ const faqs = [
 
 export default function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [whatsappNumber, setWhatsappNumber] = useState('+6285792381511');
+
+  useEffect(() => {
+    // Load WhatsApp number from localStorage
+    const businessProfile = localStorage.getItem('businessProfile');
+    if (businessProfile) {
+      try {
+        const profile = JSON.parse(businessProfile);
+        if (profile.whatsapp) {
+          setWhatsappNumber(profile.whatsapp);
+        }
+      } catch (error) {
+        console.error('Error loading business profile:', error);
+      }
+    }
+
+    // Listen for storage changes from admin page
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'businessProfile' && e.newValue) {
+        try {
+          const profile = JSON.parse(e.newValue);
+          if (profile.whatsapp) {
+            setWhatsappNumber(profile.whatsapp);
+          }
+        } catch (error) {
+          console.error('Error loading business profile:', error);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   return (
     <section className="py-20 px-6 bg-gradient-to-b from-white to-orange-50">
@@ -90,7 +123,7 @@ export default function FAQ() {
             Masih ada pertanyaan atau butuh penjelasan lebih detail?
           </p>
           <a
-            href="https://wa.me/+6285792381511?text=Halo,%20saya%20mau%20tanya%20seputar%20sewa%20gerobak"
+            href={`https://wa.me/${whatsappNumber.replace(/[^0-9+]/g, '')}?text=Halo,%20saya%20mau%20tanya%20seputar%20sewa%20gerobak`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-green-500 text-white px-8 py-4 rounded-lg font-bold hover:bg-green-600 transition-all shadow-lg hover:shadow-xl"
