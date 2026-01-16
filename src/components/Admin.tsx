@@ -1,4 +1,4 @@
-import { LogOut, Edit2, MessageCircle, ArrowLeft } from 'lucide-react';
+import { LogOut, Edit2, MessageCircle, ArrowLeft, Plus, Trash2, Coffee, IceCream, Sandwich, Soup, Drumstick, ShoppingCart } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -51,6 +51,80 @@ export default function Admin() {
   const [editingPlanData, setEditingPlanData] = useState({ price: '' });
   const [showPricingModal, setShowPricingModal] = useState(false);
 
+  // Icon mapping untuk gerobak
+  const iconMap: { [key: string]: any } = {
+    Coffee,
+    IceCream,
+    Sandwich,
+    Soup,
+    Drumstick,
+    ShoppingCart
+  };
+
+  // Default carts data
+  const defaultCartsData = [
+    {
+      id: 'GR-001',
+      iconName: 'Coffee',
+      name: 'Gerobak Kopi / Coffee Cart',
+      description: 'Desain modern dan compact, cocok untuk jualan kopi, espresso, dan minuman kekinian. Dilengkapi tempat penyimpanan bahan dan display menarik.',
+      features: ['Tempat mesin kopi', 'Storage untuk cup', 'Display topping', 'Lampu LED']
+    },
+    {
+      id: 'GR-002',
+      iconName: 'IceCream',
+      name: 'Gerobak Es Teh / Minuman',
+      description: 'Sempurna untuk bisnis minuman segar seperti es teh, jus, smoothies, dan minuman dingin lainnya. Ruang luas untuk ice box dan dispenser.',
+      features: ['Ruang ice box besar', 'Tempat dispenser', 'Rak botol/cup', 'Parasol pelindung']
+    },
+    {
+      id: 'GR-003',
+      iconName: 'Sandwich',
+      name: 'Gerobak Snack / Gorengan',
+      description: 'Ideal untuk jualan gorengan, dimsum, risol, atau snack lainnya. Dilengkapi dengan etalase kaca untuk display produk yang higienis.',
+      features: ['Etalase kaca', 'Kompor portable', 'Rak display', 'Laci penyimpanan']
+    },
+    {
+      id: 'GR-004',
+      iconName: 'Soup',
+      name: 'Gerobak Bakso / Mie Ayam',
+      description: 'Dirancang khusus untuk jualan makanan berkuah. Tempat rebus yang aman, storage bumbu lengkap, dan tatakan mangkuk yang rapi.',
+      features: ['Kompor gas aman', 'Tempat rebus besar', 'Storage bumbu', 'Rak mangkuk']
+    },
+    {
+      id: 'GR-005',
+      iconName: 'Drumstick',
+      name: 'Gerobak Ayam Geprek',
+      description: 'Gerobak khusus untuk ayam geprek dan gorengan. Dilengkapi dengan fryer space, tempat cobek, dan display yang menggugah selera.',
+      features: ['Ruang fryer', 'Display etalase', 'Tempat cobek', 'Storage matang']
+    }
+  ];
+
+  // Initialize carts from localStorage or use defaults
+  const [carts, setCarts] = useState(() => {
+    const savedCartsData = localStorage.getItem('cartsData');
+    if (savedCartsData) {
+      try {
+        return JSON.parse(savedCartsData);
+      } catch (error) {
+        console.error('Error loading saved carts data:', error);
+        return defaultCartsData;
+      }
+    }
+    return defaultCartsData;
+  });
+
+  // Cart form states
+  const [showCartModal, setShowCartModal] = useState(false);
+  const [editingCartId, setEditingCartId] = useState<string | null>(null);
+  const [cartFormData, setCartFormData] = useState({
+    id: '',
+    iconName: 'ShoppingCart',
+    name: '',
+    description: ''
+  });
+  const [cartMessage, setCartMessage] = useState({ type: '', text: '' });
+
   // Sync business profile to localStorage
   useEffect(() => {
     localStorage.setItem('businessProfile', JSON.stringify(businessProfile));
@@ -63,6 +137,34 @@ export default function Admin() {
   useEffect(() => {
     localStorage.setItem('pricingPlans', JSON.stringify(pricingPlans));
   }, [pricingPlans]);
+
+  // Initialize carts to localStorage on mount if not exists
+  useEffect(() => {
+    const savedCartsData = localStorage.getItem('cartsData');
+    if (!savedCartsData) {
+      localStorage.setItem('cartsData', JSON.stringify(defaultCartsData));
+    }
+  }, []);
+
+  // Sync carts to localStorage
+  useEffect(() => {
+    localStorage.setItem('cartsData', JSON.stringify(carts));
+    // Trigger custom event for same tab
+    try {
+      window.dispatchEvent(new CustomEvent('cartsDataUpdated'));
+    } catch (e) {
+      // ignore if dispatch fails
+    }
+    // Trigger storage event for other tabs/windows
+    try {
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'cartsData',
+        newValue: JSON.stringify(carts)
+      }));
+    } catch (e) {
+      // ignore if dispatch fails
+    }
+  }, [carts]);
 
   const handleSaveBusinessProfile = () => {
     setBusinessMessage({ type: '', text: '' });
@@ -129,6 +231,79 @@ export default function Admin() {
       setShowPricingModal(false);
       setEditingPlanId(null);
     }
+  };
+
+  // Cart management functions
+  const handleAddCart = () => {
+    setEditingCartId(null);
+    setCartFormData({
+      id: `GR-${String(carts.length + 1).padStart(3, '0')}`,
+      iconName: 'ShoppingCart',
+      name: '',
+      description: ''
+    });
+    setCartMessage({ type: '', text: '' });
+    setShowCartModal(true);
+  };
+
+  const handleEditCart = (cartId: string) => {
+    const cart = carts.find((c: any) => c.id === cartId);
+    if (cart) {
+      setEditingCartId(cartId);
+      setCartFormData({
+        id: cart.id,
+        iconName: cart.iconName || 'ShoppingCart',
+        name: cart.name || '',
+        description: cart.description || ''
+      });
+      setCartMessage({ type: '', text: '' });
+      setShowCartModal(true);
+    }
+  };
+
+  const handleDeleteCart = (cartId: string) => {
+    if (window.confirm('Apakah Anda yakin ingin menghapus gerobak ini?')) {
+      setCarts(carts.filter((c: any) => c.id !== cartId));
+    }
+  };
+
+  const handleSaveCart = () => {
+    setCartMessage({ type: '', text: '' });
+
+    // Validation
+    if (!cartFormData.name.trim()) {
+      setCartMessage({ type: 'error', text: 'Nama gerobak tidak boleh kosong' });
+      return;
+    }
+    if (!cartFormData.description.trim()) {
+      setCartMessage({ type: 'error', text: 'Deskripsi tidak boleh kosong' });
+      return;
+    }
+
+    const cartData = {
+      id: cartFormData.id,
+      iconName: cartFormData.iconName,
+      name: cartFormData.name.trim(),
+      description: cartFormData.description.trim()
+    };
+
+    if (editingCartId) {
+      // Update existing cart
+      setCarts(carts.map((c: any) => 
+        c.id === editingCartId ? cartData : c
+      ));
+      setCartMessage({ type: 'success', text: 'Gerobak berhasil diperbarui!' });
+    } else {
+      // Add new cart
+      setCarts([...carts, cartData]);
+      setCartMessage({ type: 'success', text: 'Gerobak berhasil ditambahkan!' });
+    }
+
+    setTimeout(() => {
+      setCartMessage({ type: '', text: '' });
+      setShowCartModal(false);
+      setEditingCartId(null);
+    }, 1500);
   };
 
   const handleLogout = () => {
@@ -205,6 +380,60 @@ export default function Admin() {
             </div>
           </div>
 
+          {/* Kelola Gerobak */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-2xl font-bold text-gray-900">Kelola Gerobak</h3>
+                <p className="text-gray-600 mt-1">Tambah, edit, atau hapus gerobak yang ditampilkan di landing page</p>
+              </div>
+              <button 
+                onClick={handleAddCart}
+                className="flex items-center gap-2 px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-semibold transition-colors"
+              >
+                <Plus size={20} />
+                Tambah Gerobak
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {carts.map((cart: any) => {
+                const IconComponent = iconMap[cart.iconName] || ShoppingCart;
+                return (
+                  <div key={cart.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                          <IconComponent className="text-orange-600" size={24} />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-gray-900">{cart.name}</h4>
+                          <p className="text-xs text-gray-500">{cart.id}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">{cart.description}</p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEditCart(cart.id)}
+                        className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-semibold transition-colors flex items-center justify-center gap-1"
+                      >
+                        <Edit2 size={14} />
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCart(cart.id)}
+                        className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-semibold transition-colors flex items-center justify-center"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Profil Bisnis */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between mb-6">
@@ -278,6 +507,99 @@ export default function Admin() {
                 className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-semibold transition-colors"
               >
                 Simpan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cart Modal */}
+      {showCartModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              {editingCartId ? 'Edit Gerobak' : 'Tambah Gerobak Baru'}
+            </h2>
+            
+            {cartMessage.text && (
+              <div className={`mb-4 p-4 rounded-lg ${
+                cartMessage.type === 'error' 
+                  ? 'bg-red-50 border border-red-200 text-red-800' 
+                  : 'bg-green-50 border border-green-200 text-green-800'
+              }`}>
+                <p className="text-sm font-medium">{cartMessage.text}</p>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">ID Gerobak</label>
+                <input
+                  type="text"
+                  value={cartFormData.id}
+                  onChange={(e) => setCartFormData({ ...cartFormData, id: e.target.value })}
+                  placeholder="GR-001"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  disabled={!!editingCartId}
+                />
+                <p className="text-xs text-gray-500 mt-1">ID tidak bisa diubah saat edit</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Icon</label>
+                <select
+                  value={cartFormData.iconName}
+                  onChange={(e) => setCartFormData({ ...cartFormData, iconName: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  <option value="Coffee">☕ Coffee</option>
+                  <option value="IceCream">🍦 Ice Cream</option>
+                  <option value="Sandwich">🥪 Sandwich</option>
+                  <option value="Soup">🍜 Soup</option>
+                  <option value="Drumstick">🍗 Drumstick</option>
+                  <option value="ShoppingCart">🛒 Shopping Cart</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nama Gerobak *</label>
+                <input
+                  type="text"
+                  value={cartFormData.name}
+                  onChange={(e) => setCartFormData({ ...cartFormData, name: e.target.value })}
+                  placeholder="Contoh: Gerobak Kopi / Coffee Cart"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi *</label>
+                <textarea
+                  value={cartFormData.description}
+                  onChange={(e) => setCartFormData({ ...cartFormData, description: e.target.value })}
+                  placeholder="Deskripsi lengkap tentang gerobak..."
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowCartModal(false);
+                  setCartMessage({ type: '', text: '' });
+                  setEditingCartId(null);
+                }}
+                className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 font-semibold transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleSaveCart}
+                className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-semibold transition-colors"
+              >
+                {editingCartId ? 'Simpan Perubahan' : 'Tambah Gerobak'}
               </button>
             </div>
           </div>

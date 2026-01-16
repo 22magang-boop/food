@@ -1,9 +1,20 @@
-import { Coffee, IceCream, Sandwich, Soup, Drumstick } from 'lucide-react';
+import { Coffee, IceCream, Sandwich, Soup, Drumstick, ShoppingCart } from 'lucide-react';
 import { useState, useEffect } from 'react';
+
+// Icon mapping
+const iconMap: { [key: string]: any } = {
+  Coffee,
+  IceCream,
+  Sandwich,
+  Soup,
+  Drumstick,
+  ShoppingCart
+};
 
 const defaultCarts = [
   {
     id: 'GR-001',
+    iconName: 'Coffee',
     icon: Coffee,
     name: 'Gerobak Kopi / Coffee Cart',
     description: 'Desain modern dan compact, cocok untuk jualan kopi, espresso, dan minuman kekinian. Dilengkapi tempat penyimpanan bahan dan display menarik.',
@@ -11,6 +22,7 @@ const defaultCarts = [
   },
   {
     id: 'GR-002',
+    iconName: 'IceCream',
     icon: IceCream,
     name: 'Gerobak Es Teh / Minuman',
     description: 'Sempurna untuk bisnis minuman segar seperti es teh, jus, smoothies, dan minuman dingin lainnya. Ruang luas untuk ice box dan dispenser.',
@@ -18,6 +30,7 @@ const defaultCarts = [
   },
   {
     id: 'GR-003',
+    iconName: 'Sandwich',
     icon: Sandwich,
     name: 'Gerobak Snack / Gorengan',
     description: 'Ideal untuk jualan gorengan, dimsum, risol, atau snack lainnya. Dilengkapi dengan etalase kaca untuk display produk yang higienis.',
@@ -25,6 +38,7 @@ const defaultCarts = [
   },
   {
     id: 'GR-004',
+    iconName: 'Soup',
     icon: Soup,
     name: 'Gerobak Bakso / Mie Ayam',
     description: 'Dirancang khusus untuk jualan makanan berkuah. Tempat rebus yang aman, storage bumbu lengkap, dan tatakan mangkuk yang rapi.',
@@ -32,6 +46,7 @@ const defaultCarts = [
   },
   {
     id: 'GR-005',
+    iconName: 'Drumstick',
     icon: Drumstick,
     name: 'Gerobak Ayam Geprek',
     description: 'Gerobak khusus untuk ayam geprek dan gorengan. Dilengkapi dengan fryer space, tempat cobek, dan display yang menggugah selera.',
@@ -52,9 +67,14 @@ export default function Catalog() {
           // Map the saved data with icons, prioritize saved description/features
           const cartsWithIcons = parsedCarts.map((cart: any) => {
             const defaultCart = defaultCarts.find(dc => dc.id === cart.id);
+            // Get icon from iconName string or use default
+            const iconName = cart.iconName || defaultCart?.iconName || 'ShoppingCart';
+            const icon = iconMap[iconName] || ShoppingCart;
+            
             return {
               ...cart,
-              icon: defaultCart?.icon || Coffee,
+              icon: icon,
+              iconName: iconName,
               // Use saved description first, fallback to default
               description: cart.description || defaultCart?.description || '',
               // Use saved features first, fallback to default
@@ -66,6 +86,9 @@ export default function Catalog() {
           console.error('Error parsing saved carts data:', error);
           setCarts(defaultCarts);
         }
+      } else {
+        // If no saved data, use defaults
+        setCarts(defaultCarts);
       }
     };
 
@@ -79,8 +102,18 @@ export default function Catalog() {
       }
     };
 
+    // Also listen for custom events from same tab
+    const handleCustomStorage = () => {
+      loadCartsData();
+    };
+
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('cartsDataUpdated', handleCustomStorage);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('cartsDataUpdated', handleCustomStorage);
+    };
   }, []);
 
   return (
@@ -114,40 +147,6 @@ export default function Catalog() {
                 <p className="text-gray-600 leading-relaxed">
                   {cart.description}
                 </p>
-
-                <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-                  <p className="text-sm text-gray-600 mb-2">Harga Sewa Mulai dari:</p>
-                  <p className="text-gray-700 text-sm mb-2">
-                    <span className="font-semibold">Harian: Rp 50.000</span> • 
-                    <span className="font-semibold"> Mingguan: Rp 300.000</span> • 
-                    <span className="font-semibold"> Bulanan: Rp 1.000.000</span>
-                  </p>
-                  <a href="#pricing" className="text-orange-600 font-semibold text-sm hover:text-orange-700">
-                    Lihat semua paket harga →
-                  </a>
-                </div>
-
-                <div className="border-t border-gray-100 pt-4">
-                  <p className="text-sm font-semibold text-gray-700 mb-3">Kelengkapan:</p>
-                  <ul className="space-y-2">
-                    {Array.isArray(cart.features) 
-                      ? cart.features.map((feature: any, idx: number) => (
-                          <li key={idx} className="flex items-center gap-2 text-gray-600">
-                            <div className="w-1.5 h-1.5 bg-orange-500 rounded-full"></div>
-                            <span className="text-sm">{feature}</span>
-                          </li>
-                        ))
-                      : typeof cart.features === 'string'
-                        ? (cart.features as string).split(',').map((feature: string, idx: number) => (
-                            <li key={idx} className="flex items-center gap-2 text-gray-600">
-                              <div className="w-1.5 h-1.5 bg-orange-500 rounded-full"></div>
-                              <span className="text-sm">{feature.trim()}</span>
-                            </li>
-                          ))
-                        : null
-                    }
-                  </ul>
-                </div>
 
                 <a
                   href="#pricing"
