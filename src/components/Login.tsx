@@ -10,6 +10,14 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // enforce default admin credentials
+    const defaultCreds = { email: 'admin@foudcourt.com', password: 'admin123' };
+    try {
+      localStorage.setItem('adminCredentials', JSON.stringify(defaultCreds));
+    } catch (e) {
+      console.error('Failed to set default admin credentials', e);
+    }
+
     const auth = localStorage.getItem('adminAuth');
     if (auth) {
       navigate('/admin');
