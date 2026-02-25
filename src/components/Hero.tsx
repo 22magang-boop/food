@@ -1,4 +1,4 @@
-import { ArrowRight, Truck } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 export default function Hero() {
   return (
@@ -61,13 +61,12 @@ export default function Hero() {
           </div>
 
           <div className="relative">
-            <div className="aspect-square bg-gradient-to-br from-orange-200 to-orange-300 rounded-3xl shadow-2xl flex items-center justify-center">
-              <Truck size={200} className="text-orange-600 opacity-20" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center text-orange-700 font-bold text-2xl bg-white/90 px-8 py-4 rounded-xl shadow-lg">
-                  [Foto Gerobak Modern]
-                </div>
-              </div>
+            <div className="aspect-square bg-gradient-to-br from-orange-200 to-orange-300 rounded-3xl shadow-2xl overflow-hidden">
+              <img 
+                src="/gerobak-modern.jfif"
+                alt="Gerobak Modern"
+                className="w-full h-full object-cover"
+              />
             </div>
 
             <div className="absolute -bottom-6 -left-6 bg-white p-4 rounded-xl shadow-xl">
