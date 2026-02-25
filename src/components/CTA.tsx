@@ -96,7 +96,7 @@ export default function CTA() {
       </div>
 
       <footer className="mt-16 pt-8 border-t border-orange-400/30 text-center text-orange-100">
-        <p className="mb-2">© 2024 [Nama Brand]. Semua hak cipta dilindungi.</p>
+        <p className="mb-2">© 2024 [SewaContainer]. Semua hak cipta dilindungi.</p>
         <p className="text-sm text-orange-200">Solusi Tepat untuk Memulai Bisnis Kuliner Anda</p>
       </footer>
     </section>
