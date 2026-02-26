@@ -1,4 +1,6 @@
-import { Star, User } from 'lucide-react';
+import { Star } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { getTestimonials } from '../lib/supabaseApi';
 
 const testimonials = [
   {
@@ -25,6 +27,25 @@ const testimonials = [
 ];
 
 export default function Testimonials() {
+  const [items, setItems] = useState(testimonials);
+
+  useEffect(() => {
+    getTestimonials()
+      .then((rows) => {
+        if (!rows.length) return;
+        setItems(
+          rows.map((r) => ({
+            name: r.name,
+            business: r.business,
+            avatar: r.avatar || '👤',
+            rating: r.rating,
+            text: r.text,
+          }))
+        );
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <section className="py-20 px-6 bg-white">
       <div className="max-w-7xl mx-auto">
@@ -38,7 +59,7 @@ export default function Testimonials() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {testimonials.map((testimonial, index) => (
+          {items.map((testimonial, index) => (
             <div
               key={index}
               className="bg-gradient-to-br from-orange-50 to-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all border border-orange-100"

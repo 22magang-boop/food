@@ -9,6 +9,7 @@ import HowItWorks from './components/HowItWorks';
 import Testimonials from './components/Testimonials';
 import FAQ from './components/FAQ';
 import CTA from './components/CTA';
+import { getBusinessProfile } from './lib/supabaseApi';
 
 function App() {
   const [whatsappNumber, setWhatsappNumber] = useState(() => {
@@ -25,6 +26,12 @@ function App() {
   });
 
   useEffect(() => {
+    getBusinessProfile()
+      .then((profile) => {
+        if (profile?.whatsapp) setWhatsappNumber(profile.whatsapp);
+      })
+      .catch(() => {});
+
     const onStorage = (e: StorageEvent) => {
       if (e.key === 'businessProfile') {
         try {

@@ -1,5 +1,6 @@
 import { Coffee, IceCream, Sandwich, Soup, Drumstick, ShoppingCart } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { getCarts } from '../lib/supabaseApi';
 
 // Icon mapping
 const iconMap: { [key: string]: any } = {
@@ -58,7 +59,6 @@ export default function Catalog() {
   const [carts, setCarts] = useState(defaultCarts);
 
   useEffect(() => {
-    // Load carts data from localStorage
     const loadCartsData = () => {
       const savedCartsData = localStorage.getItem('cartsData');
       if (savedCartsData) {
@@ -92,8 +92,37 @@ export default function Catalog() {
       }
     };
 
-    // Load initially
-    loadCartsData();
+    const loadCartsFromSupabase = async () => {
+      try {
+        const rows = await getCarts();
+        if (!rows.length) return false;
+
+        const cartsWithIcons = rows.map((cart: any) => {
+          const defaultCart = defaultCarts.find(dc => dc.id === cart.id);
+          const iconName = cart.icon_name || defaultCart?.iconName || 'ShoppingCart';
+          const icon = iconMap[iconName] || ShoppingCart;
+
+          return {
+            id: cart.id,
+            iconName,
+            icon,
+            name: cart.name,
+            description: cart.description || defaultCart?.description || '',
+            features: (cart.features as any) || defaultCart?.features || []
+          };
+        });
+
+        setCarts(cartsWithIcons as any);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    };
+
+    // Load initially: Supabase -> localStorage -> defaults
+    loadCartsFromSupabase().then((ok) => {
+      if (!ok) loadCartsData();
+    });
 
     // Listen for changes from other tabs/windows
     const handleStorageChange = (e: StorageEvent) => {

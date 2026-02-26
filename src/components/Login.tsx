@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, User } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -10,53 +11,31 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // enforce default admin credentials
-    const defaultCreds = { email: 'admin@foudcourt.com', password: 'admin123' };
-    try {
-      localStorage.setItem('adminCredentials', JSON.stringify(defaultCreds));
-    } catch (e) {
-      console.error('Failed to set default admin credentials', e);
-    }
-
-    const auth = localStorage.getItem('adminAuth');
-    if (auth) {
-      navigate('/admin');
-    }
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) navigate('/admin');
+    });
   }, [navigate]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      // Get stored credentials from localStorage or use defaults
-      let adminCredentials = { email: 'admin@foudcourt.com', password: 'admin123' };
-      const storedCredentials = localStorage.getItem('adminCredentials');
-      
-      if (storedCredentials) {
-        try {
-          adminCredentials = JSON.parse(storedCredentials);
-        } catch (error) {
-          console.error('Error loading admin credentials:', error);
-        }
-      }
-
-      // Check login credentials
-      if (email === adminCredentials.email && password === adminCredentials.password) {
-        // Store auth token in localStorage
-        localStorage.setItem('adminAuth', JSON.stringify({
-          email: email,
-          token: 'admin-token-' + Date.now(),
-          login: new Date().toISOString()
-        }));
-        navigate('/admin');
-      } else {
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (signInError) {
         setError('Email atau password salah');
         setLoading(false);
+        return;
       }
-    }, 500);
+      navigate('/admin');
+    } catch (err) {
+      setError('Gagal login. Coba lagi.');
+      setLoading(false);
+    }
   };
 
   return (

@@ -1,5 +1,6 @@
 import { HelpCircle, ChevronDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { getBusinessProfile } from '../lib/supabaseApi';
 
 const faqs = [
   {
@@ -41,18 +42,24 @@ export default function FAQ() {
   const [whatsappNumber, setWhatsappNumber] = useState('+6282223456206');
 
   useEffect(() => {
-    // Load WhatsApp number from localStorage
-    const businessProfile = localStorage.getItem('businessProfile');
-    if (businessProfile) {
-      try {
-        const profile = JSON.parse(businessProfile);
-        if (profile.whatsapp) {
-          setWhatsappNumber(profile.whatsapp);
+    const loadFromLocal = () => {
+      const businessProfile = localStorage.getItem('businessProfile');
+      if (businessProfile) {
+        try {
+          const profile = JSON.parse(businessProfile);
+          if (profile.whatsapp) setWhatsappNumber(profile.whatsapp);
+        } catch (error) {
+          console.error('Error loading business profile:', error);
         }
-      } catch (error) {
-        console.error('Error loading business profile:', error);
       }
-    }
+    };
+
+    getBusinessProfile()
+      .then((profile) => {
+        if (profile?.whatsapp) setWhatsappNumber(profile.whatsapp);
+        else loadFromLocal();
+      })
+      .catch(() => loadFromLocal());
 
     // Listen for storage changes from admin page
     const handleStorageChange = (e: StorageEvent) => {

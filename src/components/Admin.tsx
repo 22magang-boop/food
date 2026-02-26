@@ -1,6 +1,8 @@
 import { LogOut, Edit2, MessageCircle, ArrowLeft, Plus, Trash2, Coffee, IceCream, Sandwich, Soup, Drumstick, ShoppingCart } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../lib/supabaseClient';
+import { deleteCartById, getBusinessProfile, getCarts, getPricingPlans, upsertBusinessProfile, upsertCarts, upsertPricingPlans } from '../lib/supabaseApi';
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -125,6 +127,52 @@ export default function Admin() {
   });
   const [cartMessage, setCartMessage] = useState({ type: '', text: '' });
 
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try {
+        const [bp, sbPlans, sbCarts] = await Promise.all([getBusinessProfile(), getPricingPlans(), getCarts()]);
+        if (!mounted) return;
+
+        if (bp) {
+          setBusinessProfile(bp);
+          setBusinessFormData({ ...bp });
+          if ((bp as any).whatsapp) setWhatsappNumber((bp as any).whatsapp);
+        }
+
+        if (sbPlans.length) {
+          setPricingPlans(
+            sbPlans.map((p) => ({
+              id: p.id,
+              name: p.name,
+              price: p.price,
+              period: p.period,
+            }))
+          );
+        }
+
+        if (sbCarts.length) {
+          setCarts(
+            sbCarts.map((c: any) => ({
+              id: c.id,
+              iconName: c.icon_name,
+              name: c.name,
+              description: c.description,
+              features: (c.features as any) || [],
+            }))
+          );
+        }
+      } catch (e) {
+        // ignore; fallback stays on localStorage/default initial state
+      }
+    };
+
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   // Sync business profile to localStorage
   useEffect(() => {
     localStorage.setItem('businessProfile', JSON.stringify(businessProfile));
@@ -166,7 +214,7 @@ export default function Admin() {
     }
   }, [carts]);
 
-  const handleSaveBusinessProfile = () => {
+  const handleSaveBusinessProfile = async () => {
     setBusinessMessage({ type: '', text: '' });
     
     if (!businessFormData.name) {
@@ -198,7 +246,27 @@ export default function Admin() {
       return;
     }
 
-    setBusinessProfile({ ...businessFormData });
+    try {
+      const saved = await upsertBusinessProfile({
+        name: businessFormData.name,
+        phone: businessFormData.phone,
+        email: businessFormData.email,
+        whatsapp: businessFormData.whatsapp,
+        address: businessFormData.address,
+        city: businessFormData.city,
+        province: businessFormData.province,
+        description: businessFormData.description,
+      });
+      if (saved) {
+        setBusinessProfile({ ...saved });
+        setBusinessFormData({ ...saved });
+      } else {
+        setBusinessProfile({ ...businessFormData });
+      }
+    } catch (e) {
+      setBusinessMessage({ type: 'error', text: 'Gagal menyimpan ke database. Pastikan sudah login admin.' });
+      return;
+    }
     // notify other parts of the app (same tab) that the business profile changed
     try {
       window.dispatchEvent(new CustomEvent('businessProfileUpdated', { detail: { ...businessFormData } }));
@@ -221,16 +289,32 @@ export default function Admin() {
     }
   };
 
-  const handleSavePricingPlan = () => {
-    if (editingPlanId && editingPlanData.price) {
-      setPricingPlans(pricingPlans.map((plan: any) => 
-        plan.id === editingPlanId 
-          ? { ...plan, price: editingPlanData.price }
-          : plan
-      ));
-      setShowPricingModal(false);
-      setEditingPlanId(null);
+  const handleSavePricingPlan = async () => {
+    if (!editingPlanId || !editingPlanData.price) return;
+
+    const nextPlans = pricingPlans.map((plan: any) =>
+      plan.id === editingPlanId ? { ...plan, price: editingPlanData.price } : plan
+    );
+    setPricingPlans(nextPlans);
+
+    try {
+      await upsertPricingPlans(
+        nextPlans.map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          period: p.period,
+          description: null,
+          features: null,
+          popular: false,
+        }))
+      );
+    } catch (e) {
+      // ignore
     }
+
+    setShowPricingModal(false);
+    setEditingPlanId(null);
   };
 
   // Cart management functions
@@ -261,13 +345,18 @@ export default function Admin() {
     }
   };
 
-  const handleDeleteCart = (cartId: string) => {
+  const handleDeleteCart = async (cartId: string) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus gerobak ini?')) {
+      try {
+        await deleteCartById(cartId);
+      } catch (e) {
+        // ignore
+      }
       setCarts(carts.filter((c: any) => c.id !== cartId));
     }
   };
 
-  const handleSaveCart = () => {
+  const handleSaveCart = async () => {
     setCartMessage({ type: '', text: '' });
 
     // Validation
@@ -280,22 +369,50 @@ export default function Admin() {
       return;
     }
 
+    const existing = carts.find((c: any) => c.id === (editingCartId || cartFormData.id));
     const cartData = {
       id: cartFormData.id,
       iconName: cartFormData.iconName,
       name: cartFormData.name.trim(),
-      description: cartFormData.description.trim()
+      description: cartFormData.description.trim(),
+      features: existing?.features || []
     };
 
     if (editingCartId) {
       // Update existing cart
-      setCarts(carts.map((c: any) => 
-        c.id === editingCartId ? cartData : c
-      ));
+      const nextCarts = carts.map((c: any) => (c.id === editingCartId ? cartData : c));
+      setCarts(nextCarts);
+      try {
+        await upsertCarts(
+          nextCarts.map((c: any) => ({
+            id: c.id,
+            icon_name: c.iconName,
+            name: c.name,
+            description: c.description,
+            features: c.features || [],
+          }))
+        );
+      } catch (e) {
+        // ignore
+      }
       setCartMessage({ type: 'success', text: 'Gerobak berhasil diperbarui!' });
     } else {
       // Add new cart
-      setCarts([...carts, cartData]);
+      const nextCarts = [...carts, cartData];
+      setCarts(nextCarts);
+      try {
+        await upsertCarts(
+          nextCarts.map((c: any) => ({
+            id: c.id,
+            icon_name: c.iconName,
+            name: c.name,
+            description: c.description,
+            features: c.features || [],
+          }))
+        );
+      } catch (e) {
+        // ignore
+      }
       setCartMessage({ type: 'success', text: 'Gerobak berhasil ditambahkan!' });
     }
 
@@ -308,8 +425,10 @@ export default function Admin() {
 
   const handleLogout = () => {
     if (window.confirm('Apakah Anda yakin ingin logout?')) {
-      localStorage.removeItem('adminAuth');
-      navigate('/login');
+      supabase.auth.signOut().finally(() => {
+        localStorage.removeItem('adminAuth');
+        navigate('/login');
+      });
     }
   };
 

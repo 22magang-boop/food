@@ -1,5 +1,6 @@
 import { Check, Star } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { getBusinessProfile, getPricingPlans } from '../lib/supabaseApi';
 
 interface PricingPlan {
   id: string;
@@ -67,33 +68,58 @@ export default function Pricing() {
   const [whatsappNumber, setWhatsappNumber] = useState('+6282223456206');
 
   useEffect(() => {
-    // Load pricing plans from localStorage
-    const savedPricingPlans = localStorage.getItem('pricingPlans');
-    if (savedPricingPlans) {
-      try {
-        const loadedPlans = JSON.parse(savedPricingPlans);
-        // Merge with default plans to preserve structure and features
-        setPlans(loadedPlans.map((plan: PricingPlan, index: number) => ({
-          ...defaultPlans[index],
-          ...plan
-        })));
-      } catch (error) {
-        console.error('Error loading pricing plans:', error);
-      }
-    }
-
-    // Load WhatsApp number from localStorage
-    const businessProfile = localStorage.getItem('businessProfile');
-    if (businessProfile) {
-      try {
-        const profile = JSON.parse(businessProfile);
-        if (profile.whatsapp) {
-          setWhatsappNumber(profile.whatsapp);
+    const loadFromLocal = () => {
+      const savedPricingPlans = localStorage.getItem('pricingPlans');
+      if (savedPricingPlans) {
+        try {
+          const loadedPlans = JSON.parse(savedPricingPlans);
+          setPlans(loadedPlans.map((plan: PricingPlan, index: number) => ({
+            ...defaultPlans[index],
+            ...plan
+          })));
+        } catch (error) {
+          console.error('Error loading pricing plans:', error);
         }
-      } catch (error) {
-        console.error('Error loading business profile:', error);
       }
-    }
+
+      const businessProfile = localStorage.getItem('businessProfile');
+      if (businessProfile) {
+        try {
+          const profile = JSON.parse(businessProfile);
+          if (profile.whatsapp) setWhatsappNumber(profile.whatsapp);
+        } catch (error) {
+          console.error('Error loading business profile:', error);
+        }
+      }
+    };
+
+    const loadFromSupabase = async () => {
+      try {
+        const [sbPlans, sbProfile] = await Promise.all([getPricingPlans(), getBusinessProfile()]);
+        if (sbPlans.length) {
+          const merged = defaultPlans.map((dp) => {
+            const found = sbPlans.find((p) => p.id === dp.id);
+            if (!found) return dp;
+            return {
+              ...dp,
+              name: found.name,
+              price: found.price,
+              period: found.period,
+              description: found.description ?? dp.description,
+              features: (found.features as any) ?? dp.features,
+              popular: found.popular ?? dp.popular,
+            };
+          });
+          setPlans(merged);
+        }
+        if (sbProfile?.whatsapp) setWhatsappNumber(sbProfile.whatsapp);
+        if (!sbPlans.length && !sbProfile) loadFromLocal();
+      } catch (e) {
+        loadFromLocal();
+      }
+    };
+
+    loadFromSupabase();
 
     // Listen for storage changes from admin page
     const handleStorageChange = (e: StorageEvent) => {
