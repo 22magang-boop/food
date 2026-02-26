@@ -64,7 +64,7 @@ const defaultPlans: PricingPlan[] = [
 
 export default function Pricing() {
   const [plans, setPlans] = useState<PricingPlan[]>(defaultPlans);
-  const [whatsappNumber, setWhatsappNumber] = useState('+6285792381511');
+  const [whatsappNumber, setWhatsappNumber] = useState('+6282223456206');
 
   useEffect(() => {
     // Load pricing plans from localStorage

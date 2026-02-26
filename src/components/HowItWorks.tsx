@@ -78,7 +78,7 @@ export default function HowItWorks() {
               <span className="font-bold text-orange-600">Proses cepat!</span> Dari konsultasi sampai gerobak siap dipakai bisa dalam waktu 1-2 hari saja.
             </p>
             <a
-              href="https://wa.me/+6285792381511?text=Halo,%20saya%20mau%20mulai%20sewa%20gerobak"
+              href="https://wa.me/+6282223456206?text=Halo,%20saya%20mau%20mulai%20sewa%20gerobak"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 bg-orange-600 text-white px-8 py-4 rounded-lg font-bold hover:bg-orange-700 transition-all shadow-lg hover:shadow-xl"

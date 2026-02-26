@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 export default function Admin() {
   const navigate = useNavigate();
-  const [whatsappNumber, setWhatsappNumber] = useState('+6285792381511');
+  const [whatsappNumber, setWhatsappNumber] = useState('+6282223456206');
 
   // Initialize business profile from localStorage or use defaults
   const [businessProfile, setBusinessProfile] = useState(() => {
@@ -20,7 +20,7 @@ export default function Admin() {
       name: 'Foud Court',
       phone: '+62 821 1234 5678',
       email: 'info@foudcourt.com',
-      whatsapp: '+6285792381511',
+      whatsapp: '+6282223456206',
       address: 'Jl. Merdeka No. 123, Jakarta Pusat 12190',
       city: 'Jakarta',
       province: 'DKI Jakarta',

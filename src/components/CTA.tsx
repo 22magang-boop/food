@@ -2,7 +2,7 @@ import { ArrowRight, MessageCircle, Sparkles } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 export default function CTA() {
-  const [whatsappNumber, setWhatsappNumber] = useState('+6285792381511');
+  const [whatsappNumber, setWhatsappNumber] = useState('+6282223456206');
 
   useEffect(() => {
     // Load WhatsApp number from localStorage

@@ -16,12 +16,12 @@ function App() {
       const bp = localStorage.getItem('businessProfile');
       if (bp) {
         const parsed = JSON.parse(bp);
-        return parsed.whatsapp || '+6285792381511';
+        return parsed.whatsapp || '+6282223456206';
       }
     } catch (e) {
       // ignore
     }
-    return '+6285792381511';
+    return '+6282223456206';
   });
 
   useEffect(() => {

@@ -38,7 +38,7 @@ const faqs = [
 
 export default function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-  const [whatsappNumber, setWhatsappNumber] = useState('+6285792381511');
+  const [whatsappNumber, setWhatsappNumber] = useState('+6282223456206');
 
   useEffect(() => {
     // Load WhatsApp number from localStorage
